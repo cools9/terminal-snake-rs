@@ -1,0 +1,7 @@
+[package]
+name = "terminal-snake-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+germterm = "0.4.0"
