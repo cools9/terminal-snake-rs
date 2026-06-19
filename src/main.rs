@@ -1,16 +1,18 @@
 use germterm::{
-    color::Color, crossterm::event::{Event, KeyCode, KeyEvent}, draw::{self, draw_fps_counter, draw_octad, draw_rect, draw_text, draw_twoxel}, engine::{Engine, end_frame, exit_cleanup, init, start_frame}, input::poll_input, layer::create_layer
+    color::Color, crossterm::event::{Event, KeyCode, KeyEvent}, draw::{self, draw_fps_counter, draw_octad, draw_rect, draw_text, draw_twoxel}, engine::{Engine, end_frame, exit_cleanup, init, start_frame}, input::poll_input, layer::{LayerIndex, create_layer}
 };
 use std::io;
 use rand::prelude::*;
+
+
 struct Snake{
-    x:f32,
-    y:f32
+    x:u32,
+    y:u32
 }
 
 struct Apple{
-    x:f32,
-    y:f32,
+    x:u32,
+    y:u32,
     has_been_eaten:bool
 }
 
@@ -23,27 +25,28 @@ enum Direction{
 
 fn main() -> io::Result<()> {
     let mut snake=Snake{
-        x:3.0,
-        y:4.0
+        x:3,
+        y:4
     };
     let TERM_COLS:u16=100;
     let TERM_ROWS:u16=40;
     let mut apples:Vec<Apple>=Vec::new();
     let mut rng = rand::rng();
     for i in 0..5{
+        let random_x:u32=rng.random_range(2..40);
+        let random_y:u32=rng.random_range(2..20);
         apples.push(
             Apple{
-                x:rng.random_range(0..TERM_COLS).into(),
-                y:rng.random_range(0..TERM_ROWS).into(),
+                x:i+1+random_x,
+                y:i+1+random_y,
                 has_been_eaten:false
             }
-        )
+        );
     }
     let mut engine = Engine::new(TERM_COLS, TERM_ROWS)
         .limit_fps(30);
     let layer = create_layer(&mut engine, 0);
-
-    let mut apples_have_spawned:bool=false;
+    let apple_layer:LayerIndex= create_layer(&mut engine, 1);
 
     // Initialize engine and layers
     init(&mut engine)?;
@@ -68,23 +71,27 @@ fn main() -> io::Result<()> {
             }
         }
         match direction{
-            Direction::UP => snake.y -= 0.5,
-            Direction::DOWN => snake.y += 0.5,
-            Direction::LEFT => snake.x -= 0.5,
-            Direction::RIGHT => snake.x += 0.5,
+            Direction::UP => snake.y -= 1,
+            Direction::DOWN => snake.y += 1,
+            Direction::LEFT => snake.x -= 1,
+            Direction::RIGHT => snake.x += 1,
         }
-        draw_twoxel(&mut engine, layer, snake.x, snake.y, Color::RED);
+        draw_twoxel(&mut engine, layer, snake.x as f32, snake.y as f32, Color::RED);
         draw_fps_counter(&mut engine, layer, 0, 0);
         
         for apple in &apples {
             draw_twoxel(
                 &mut engine,
-                layer,
-                apple.x,
-                apple.y,
+                apple_layer,
+                apple.x as f32,
+                apple.y as f32 * 0.5,
                 Color::BLUE,
             );
+            if apple.x==snake.x && apple.y == snake.y{
+                &apples.pop();
+            }
         }
+
         
         // End the frame
         end_frame(&mut engine)?;
