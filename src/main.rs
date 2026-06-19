@@ -8,6 +8,12 @@ struct Snake{
     y:f32
 }
 
+struct Apple{
+    x:f32,
+    y:f32,
+    has_been_eaten:bool
+}
+
 enum Direction{
     UP,
     DOWN,
@@ -22,10 +28,22 @@ fn main() -> io::Result<()> {
     };
     let TERM_COLS:u16=100;
     let TERM_ROWS:u16=40;
-
+    let mut apples:Vec<Apple>=Vec::new();
+    let mut rng = rand::rng();
+    for i in 0..5{
+        apples.push(
+            Apple{
+                x:rng.random_range(0..TERM_COLS).into(),
+                y:rng.random_range(0..TERM_ROWS).into(),
+                has_been_eaten:false
+            }
+        )
+    }
     let mut engine = Engine::new(TERM_COLS, TERM_ROWS)
         .limit_fps(30);
     let layer = create_layer(&mut engine, 0);
+
+    let mut apples_have_spawned:bool=false;
 
     // Initialize engine and layers
     init(&mut engine)?;
@@ -57,13 +75,17 @@ fn main() -> io::Result<()> {
         }
         draw_twoxel(&mut engine, layer, snake.x, snake.y, Color::RED);
         draw_fps_counter(&mut engine, layer, 0, 0);
-        let mut rng = rand::rng();
-        for i in 1..5{
-            let x_range:f32=rng.random_range(0..TERM_COLS).into();
-            let y_range:f32=rng.random_range(0..TERM_ROWS).into();
-            draw_twoxel(&mut engine, layer, x_range,y_range, Color::BLUE);
+        
+        for apple in &apples {
+            draw_twoxel(
+                &mut engine,
+                layer,
+                apple.x,
+                apple.y,
+                Color::BLUE,
+            );
         }
-
+        
         // End the frame
         end_frame(&mut engine)?;
     }
