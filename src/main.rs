@@ -10,6 +10,7 @@ use germterm::{
 };
 use rand::prelude::*;
 use std::io;
+use crossterm::terminal;
 
 struct Snake {
     x: i32,
@@ -49,11 +50,24 @@ fn main() -> io::Result<()> {
     let layer = create_layer(&mut engine, 0);
     let apple_layer: LayerIndex = create_layer(&mut engine, 1);
     let mut has_not_won: bool = true;
+    let mut is_terminal_size_valid=false;
+    match terminal::size(){
+        Ok((columns,rows)) =>{
+            if columns >=TERM_COLS && rows >=TERM_ROWS{
+                is_terminal_size_valid=true;
+            }
+        }
+        Err(e)=>{
+            is_terminal_size_valid=false;
+            println!("Error:terminal size too small enlarge the terminal window");
+        }
+    }
+
     // Initialize engine and layers
     init(&mut engine)?;
     let mut direction = Direction::RIGHT;
     'update_loop: loop {
-        if has_not_won {
+        if has_not_won && is_terminal_size_valid{
             // Start the frame
             start_frame(&mut engine);
 
@@ -78,6 +92,15 @@ fn main() -> io::Result<()> {
                 Direction::DOWN => snake.y += 1,
                 Direction::LEFT => snake.x -= 1,
                 Direction::RIGHT => snake.x += 1,
+            }
+
+            if snake.x <= 0
+                || snake.x >= TERM_COLS as i32 - 1
+                || snake.y <= 0
+                || snake.y >= TERM_ROWS as i32 - 1
+            {
+                snake.x=3;
+                snake.y=4;
             }
             draw_twoxel(
                 &mut engine,
@@ -119,7 +142,7 @@ fn main() -> io::Result<()> {
             border(&mut engine, layer, TERM_COLS, TERM_ROWS);
             // End the frame
             end_frame(&mut engine)?;
-        } else {
+        } else if(is_terminal_size_valid){
             start_frame(&mut engine);
 
             draw_text(
@@ -133,6 +156,8 @@ fn main() -> io::Result<()> {
             );
 
             end_frame(&mut engine);
+        }else {
+            println!("terminal size too small expand it and rerun this please😭");
         }
     }
     // Restore terminal before exiting

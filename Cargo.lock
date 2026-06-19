@@ -591,6 +591,7 @@ dependencies = [
 name = "terminal-snake-rs"
 version = "0.1.0"
 dependencies = [
+ "crossterm 0.29.0",
  "germterm",
  "rand 0.10.1",
 ]
