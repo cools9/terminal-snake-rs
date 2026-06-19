@@ -29,7 +29,10 @@ A terminal-based Snake-inspired game written in Rust using the GermTerm renderin
 2. Extract the ZIP file.
 3. Open the extracted folder.
 4. Navigate to the executable.
-5. Run `main.exe`.
+5. Run `terminal-snake-rs.exe`.
+note:if it says terminal size too small what u can do is open cmd in fullscreen or maximised and then navigate to the root dir of the project and run
+`terminal-snake-rs.exe`
+
 
 ### Option 2: Build from Source
 
