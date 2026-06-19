@@ -1,11 +1,58 @@
-# Terminal Snake Rust
-A simple snake game made in rust for the terminal
+# Terminal Snake (Rust)
 
-# How to play
-- 1) Clone the git repo
-- 2) unzip the zip folder
-- 3) find src and navigate to it
-- 4) find main.exe
-- 5) double click it
+A terminal-based Snake-inspired game written in Rust using the GermTerm rendering engine.(not an actual snake a red dot which is the main character why>??? im not smart)
 
-# images
+## Features
+
+* Smooth terminal rendering
+* Collectible apples
+* Particle explosion effects when apples are collected
+* Keyboard controls
+* FPS counter
+* Colorful terminal graphics
+
+## Controls
+
+| Key | Action     |
+| --- | ---------- |
+| W   | Move Up    |
+| A   | Move Left  |
+| S   | Move Down  |
+| D   | Move Right |
+| Q   | Quit Game  |
+
+## Installation
+
+### Option 1: Run the Prebuilt Executable
+
+1. Download the project.
+2. Extract the ZIP file.
+3. Open the extracted folder.
+4. Navigate to the executable.
+5. Run `main.exe`.
+
+### Option 2: Build from Source
+
+#### Requirements
+
+* Rust
+* Cargo
+
+#### Build
+
+```bash
+cargo build --release
+```
+
+#### Run
+
+```bash
+cargo run --release
+```
+
+## Gameplay
+
+Move around the terminal and collect all apples to win the game. Each collected apple triggers a particle explosion effect. Clear the board to achieve victory.
+
+## Screenshots
+![Gameplay Screenshot](gallery/Screenshot%202026-06-19%20203244.png)
