@@ -1,6 +1,7 @@
 pub mod game_error;
 pub mod entity;
 
+use crossterm::event::KeyCode;
 use germterm::{
     color::{Color, ColorGradient, GradientStop},
     crossterm::event::{Event, KeyEvent},
@@ -47,6 +48,7 @@ fn start_game(engine: &mut Engine) -> Result<(), GameError> {
     init(engine)?;
     let mut direction = Direction::RIGHT;
     loop {
+        let events = poll_input();
         // Start the frame
         start_frame(engine);
 
@@ -58,16 +60,22 @@ fn start_game(engine: &mut Engine) -> Result<(), GameError> {
             );
 
             // waiting player's reply
-            for e in poll_input() {
+            for e in events {
                 if e.is_key_press() {
                     return Ok(())
                 }
             }
         } else {
             // game is still not end
-            for event in poll_input() {
-                if let Event::Key(KeyEvent { code, .. }) = event {
-                    direction = direction.from(code)
+            for event in events {
+                match event {
+                    Event::Key(KeyEvent { code, .. })  => {
+                        if code == KeyCode::Char('q') || code == KeyCode::Esc {
+                            return Err(GameError::GameOver(apples.is_empty()))
+                        }
+                        direction = direction.from(code)
+                    },
+                    _ => {},
                 }
             }
             match direction {
@@ -131,6 +139,7 @@ fn main() {
 
     match start_game(&mut engine) {
         Ok(()) => {},
+        Err(GameError::GameOver(_win)) => {}
         Err(TerminalSizeError(msg)) => println!("{}", msg),
         Err(GameError::FrameError(msg)) => println!("{}", msg),
     }
