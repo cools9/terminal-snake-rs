@@ -149,6 +149,7 @@ fn start_game() -> io::Result<()> {
             end_frame(&mut engine)?;
         }else {
             println!("terminal size too small expand it and rerun this please😭");
+            return Ok(());
         }
     }
     // Restore terminal before exiting
