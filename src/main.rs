@@ -29,8 +29,7 @@ enum Direction {
     LEFT,
     RIGHT,
 }
-
-fn main() -> io::Result<()> {
+fn start_game() -> io::Result<()> {
     let mut snake = Snake { x: 3, y: 4 };
     let TERM_COLS: u16 = 100;
     let TERM_ROWS: u16 = 40;
@@ -51,17 +50,9 @@ fn main() -> io::Result<()> {
     let apple_layer: LayerIndex = create_layer(&mut engine, 1);
     let mut has_not_won: bool = true;
     let mut is_terminal_size_valid=false;
-    match terminal::size(){
-        Ok((columns,rows)) =>{
-            if columns >=TERM_COLS && rows >=TERM_ROWS{
-                is_terminal_size_valid=true;
-            }
-        }
-        Err(e)=>{
-            is_terminal_size_valid=false;
-            println!("Error:terminal size too small enlarge the terminal window");
-        }
-    }
+
+    let (col, row) = terminal::size()?;
+    is_terminal_size_valid = col >= TERM_COLS && row >= TERM_ROWS;
 
     // Initialize engine and layers
     init(&mut engine)?;
@@ -155,14 +146,18 @@ fn main() -> io::Result<()> {
                     .with_attributes(Attributes::BOLD),
             );
 
-            end_frame(&mut engine);
+            end_frame(&mut engine)?;
         }else {
             println!("terminal size too small expand it and rerun this please😭");
         }
     }
     // Restore terminal before exiting
-    exit_cleanup(&mut engine)?;
-    return Ok(());
+    exit_cleanup(&mut engine)
+
+}
+
+fn main() {
+    start_game().unwrap();
 }
 
 fn spawn_explosion(engine: &mut Engine, layer: LayerIndex, x: f32, y: f32) {
