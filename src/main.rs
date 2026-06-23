@@ -29,10 +29,10 @@ enum Direction {
     LEFT,
     RIGHT,
 }
-fn start_game() -> io::Result<()> {
+const TERM_COLS: u16 = 100;
+const TERM_ROWS: u16 = 40;
+fn start_game(engine: &mut Engine) -> io::Result<()> {
     let mut snake = Snake { x: 3, y: 4 };
-    let TERM_COLS: u16 = 100;
-    let TERM_ROWS: u16 = 40;
 
     let mut apples: Vec<Apple> = Vec::new();
     let mut rng = rand::rng();
@@ -45,36 +45,32 @@ fn start_game() -> io::Result<()> {
             has_been_eaten: false,
         });
     }
-    let mut engine = Engine::new(TERM_COLS, TERM_ROWS).limit_fps(10);
-    let layer = create_layer(&mut engine, 0);
-    let apple_layer: LayerIndex = create_layer(&mut engine, 1);
+    let layer = create_layer(engine, 0);
+    let apple_layer: LayerIndex = create_layer(engine, 1);
     let mut has_not_won: bool = true;
-    let mut is_terminal_size_valid=false;
 
     let (col, row) = terminal::size()?;
-    is_terminal_size_valid = col >= TERM_COLS && row >= TERM_ROWS;
+    let is_terminal_size_valid= col >= TERM_COLS && row >= TERM_ROWS;
 
     // Initialize engine and layers
-    init(&mut engine)?;
+    init(engine)?;
     let mut direction = Direction::RIGHT;
-    'update_loop: loop {
+    loop {
         if has_not_won && is_terminal_size_valid{
             // Start the frame
-            start_frame(&mut engine);
+            start_frame(engine);
 
             for event in poll_input() {
                 if let Event::Key(KeyEvent { code, .. }) = event {
-                    match code {
-                        KeyCode::Char('q') => {
-                            break 'update_loop;
-                            has_not_won = false;
-                        }
-                        KeyCode::Char('w') => direction = Direction::UP,
-                        KeyCode::Char('s') => direction = Direction::DOWN,
-                        KeyCode::Char('a') => direction = Direction::LEFT,
-                        KeyCode::Char('d') => direction = Direction::RIGHT,
+                    direction = match code {
+                        KeyCode::Char('q') => return Ok(()),
 
-                        _ => {}
+                        KeyCode::Char('w') => Direction::UP,
+                        KeyCode::Char('s') => Direction::DOWN,
+                        KeyCode::Char('a') => Direction::LEFT,
+                        KeyCode::Char('d') => Direction::RIGHT,
+
+                        _ => direction,
                     }
                 }
             }
@@ -94,17 +90,17 @@ fn start_game() -> io::Result<()> {
                 snake.y=4;
             }
             draw_twoxel(
-                &mut engine,
+                engine,
                 layer,
                 snake.x as f32,
                 snake.y as f32,
                 Color::RED,
             );
-            draw_fps_counter(&mut engine, layer, 0, 0);
+            draw_fps_counter(engine, layer, 0, 0);
 
             for apple in &apples {
                 draw_twoxel(
-                    &mut engine,
+                    engine,
                     apple_layer,
                     apple.x as f32,
                     apple.y as f32,
@@ -124,41 +120,40 @@ fn start_game() -> io::Result<()> {
             });
 
             if let Some((x, y)) = explosion_pos {
-                spawn_explosion(&mut engine, apple_layer, x as f32, y as f32);
+                spawn_explosion(engine, apple_layer, x as f32, y as f32);
             }
 
             if apples.is_empty() {
                 has_not_won = false;
             }
-            border(&mut engine, layer, TERM_COLS, TERM_ROWS);
+            border(engine, layer, TERM_COLS, TERM_ROWS);
             // End the frame
-            end_frame(&mut engine)?;
-        } else if(is_terminal_size_valid){
-            start_frame(&mut engine);
+            end_frame(engine)?;
+        } else if is_terminal_size_valid {
+            start_frame(engine);
 
-            draw_text(
-                &mut engine,
-                layer,
-                10,
-                10,
+            draw_text(engine, layer, 10, 10,
                 RichText::new("YOU WON")
                     .with_fg(Color::RED)
                     .with_attributes(Attributes::BOLD),
             );
 
-            end_frame(&mut engine)?;
+            end_frame(engine)?;
         }else {
-            println!("terminal size too small expand it and rerun this please😭");
-            return Ok(());
+            eprintln!("terminal size too small expand it and rerun this please😭");
+            return Err(io::Error::new(io::ErrorKind::Other, "terminal size too small"));
         }
     }
-    // Restore terminal before exiting
-    exit_cleanup(&mut engine)
 
 }
 
 fn main() {
-    start_game().unwrap();
+    let mut engine = Engine::new(TERM_COLS, TERM_ROWS).limit_fps(10);
+
+    start_game(&mut engine).unwrap();
+
+    // Restore terminal before exiting
+    exit_cleanup(&mut engine).unwrap()
 }
 
 fn spawn_explosion(engine: &mut Engine, layer: LayerIndex, x: f32, y: f32) {
