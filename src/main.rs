@@ -1,3 +1,4 @@
+use crossterm::terminal;
 use germterm::{
     color::{Color, ColorGradient, GradientStop},
     crossterm::event::{Event, KeyCode, KeyEvent},
@@ -10,7 +11,6 @@ use germterm::{
 };
 use rand::prelude::*;
 use std::io;
-use crossterm::terminal;
 
 struct Snake {
     x: i32,
@@ -32,14 +32,33 @@ enum Direction {
 
 fn main() -> io::Result<()> {
     let mut snake = Snake { x: 3, y: 4 };
-    let TERM_COLS: u16 = 100;
-    let TERM_ROWS: u16 = 40;
+
+    // Get actual terminal size, with a sane minimum fallback
+    const MIN_COLS: u16 = 40;
+    const MIN_ROWS: u16 = 20;
+
+    let mut is_terminal_size_valid = false;
+    let (TERM_COLS, TERM_ROWS): (u16, u16) = match terminal::size() {
+        Ok((columns, rows)) => {
+            if columns >= MIN_COLS && rows >= MIN_ROWS {
+                is_terminal_size_valid = true;
+                (columns, rows)
+            } else {
+                println!("Error: terminal size too small, enlarge the terminal window");
+                (MIN_COLS, MIN_ROWS)
+            }
+        }
+        Err(_) => {
+            println!("Error: could not read terminal size");
+            (MIN_COLS, MIN_ROWS)
+        }
+    };
 
     let mut apples: Vec<Apple> = Vec::new();
     let mut rng = rand::rng();
     for i in 0..5 {
-        let random_x: i32 = rng.random_range(2..30);
-        let random_y: i32 = rng.random_range(2..20);
+        let random_x: i32 = rng.random_range(2..(TERM_COLS as i32 - 5).max(3));
+        let random_y: i32 = rng.random_range(2..(TERM_ROWS as i32 - 5).max(3));
         apples.push(Apple {
             x: i + 1 + random_x,
             y: i + 1 + random_y,
@@ -50,25 +69,12 @@ fn main() -> io::Result<()> {
     let layer = create_layer(&mut engine, 0);
     let apple_layer: LayerIndex = create_layer(&mut engine, 1);
     let mut has_not_won: bool = true;
-    let mut is_terminal_size_valid=false;
-    match terminal::size(){
-        Ok((columns,rows)) =>{
-            if columns >=TERM_COLS && rows >=TERM_ROWS{
-                is_terminal_size_valid=true;
-            }
-        }
-        Err(e)=>{
-            is_terminal_size_valid=false;
-            println!("Error:terminal size too small enlarge the terminal window");
-        }
-    }
 
     // Initialize engine and layers
     init(&mut engine)?;
     let mut direction = Direction::RIGHT;
     'update_loop: loop {
-        if has_not_won && is_terminal_size_valid{
-            // Start the frame
+        if has_not_won && is_terminal_size_valid {
             start_frame(&mut engine);
 
             for event in poll_input() {
@@ -99,8 +105,8 @@ fn main() -> io::Result<()> {
                 || snake.y <= 0
                 || snake.y >= TERM_ROWS as i32 - 1
             {
-                snake.x=3;
-                snake.y=4;
+                snake.x = 3;
+                snake.y = 4;
             }
             draw_twoxel(
                 &mut engine,
@@ -142,7 +148,7 @@ fn main() -> io::Result<()> {
             border(&mut engine, layer, TERM_COLS, TERM_ROWS);
             // End the frame
             end_frame(&mut engine)?;
-        } else if(is_terminal_size_valid){
+        } else if (is_terminal_size_valid) {
             start_frame(&mut engine);
 
             draw_text(
@@ -156,7 +162,7 @@ fn main() -> io::Result<()> {
             );
 
             end_frame(&mut engine);
-        }else {
+        } else {
             println!("terminal size too small expand it and rerun this please😭");
         }
     }
