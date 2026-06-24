@@ -1,7 +1,13 @@
 [package]
-name = "terminal-snake-rs"
+name = "terminal-snake-rust"
 version = "0.1.0"
 edition = "2024"
+description = "A terminal snake game built with germterm"
+license = "MIT"
+repository = "https://github.com/cools9/terminal-snake-rs"
+readme = "README.md"
+keywords = ["snake", "terminal", "game", "tui"]
+categories = ["games"]
 
 [dependencies]
 crossterm = "0.29.0"
